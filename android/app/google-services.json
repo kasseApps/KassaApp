@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "324369049428",
+    "project_id": "kassaapps-d7ece",
+    "storage_bucket": "kassaapps-d7ece.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324369049428:android:8a045a77bc213367958ac1",
+        "android_client_info": {
+          "package_name": "com.kassa.kassa.kassa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "324369049428-vrsultmbb9g723ir4usn4giln2eldh9q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB3sAcvF5sTrQbaZpadXmcilk0LO5Felc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "324369049428-vrsultmbb9g723ir4usn4giln2eldh9q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
