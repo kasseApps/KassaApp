@@ -1,11 +1,13 @@
 import 'dart:async';
-
 import 'package:animations/animations.dart';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kassa/admin/homeadmin.dart';
+import 'package:kassa/pegawai/homepegawai.dart';
+import 'package:kassa/start/buatpassword.dart';
 import 'package:kassa/start/daftartoko.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,7 +26,7 @@ class LoginState extends State{
   final Firestore firestore = Firestore.instance;
   final emailController =  TextEditingController();
   final passController =  TextEditingController();
-  bool buttonActive = false, obscure = true, readOnly = false, loading = false, heperEmailError = false, heperPasswordError = false;
+  bool buttonActive = false, obscure = true, readOnly = false, loading = false, heperEmailError = false, heperPasswordError = false, rememberMe = false;
   String helperEmailErrorText, helperPasswordErrorText;
 
   @override
@@ -33,34 +35,171 @@ class LoginState extends State{
   }
 
   _checkUser() async {
-    bool registered = false;
-    String nama, alamat, kategori, noizin, telepon;
+    bool registered = false, setup = false;
+    String id, foto, nama, alamat, kategori, noizin, telepon, password, idtoko;
     int role = 0;
     await firestore.collection('users').where('email',isEqualTo: emailController.text).getDocuments().then((value){
       if(value.documents.isNotEmpty){
         registered = true;
         value.documents.forEach((f) {
-          nama = f.data['namatoko'];
+          id = f.documentID;
+          if(f.data['role'] == 10){
+            nama = f.data['namatoko'];
+            kategori = f.data['kategoritoko'];
+            noizin = f.data['noizin'];
+            telepon = f.data['nomortelepon'];
+            password = f.data['katasandi'];
+          } else {
+            idtoko = f.data['toko'];
+            foto = f.data['foto'];
+            nama = f.data['nama'];
+            telepon = f.data['telepon'];
+            password = f.data['password'];
+            setup = f.data['setup'];
+          }
           alamat = f.data['alamat'];
-          kategori = f.data['kategoritoko'];
-          noizin = f.data['noizin'];
-          telepon = f.data['nomortelepon'];
           role = f.data['role'];
         });
-      } else {
-
       }
     });
     if(mounted){
       if(registered){
-        _loginApp(nama, alamat, kategori, noizin, telepon, role);
+        if(role == 10){
+          if(passController.text == password){
+            _loginApp(id, foto, nama, alamat, kategori, noizin, telepon, role, idtoko);
+          } else {
+            setState(() {
+              loading = false;
+              readOnly = false;
+            });
+            Flushbar(
+              reverseAnimationCurve: Curves.decelerate,
+              forwardAnimationCurve: Curves.decelerate,
+              flushbarPosition: FlushbarPosition.BOTTOM,
+              flushbarStyle: FlushbarStyle.FLOATING,
+              isDismissible: false,
+              backgroundColor: Colors.red[600],
+              duration: Duration(seconds: 3),
+              borderRadius: 10.0,
+              margin: EdgeInsets.all(16.0),
+              animationDuration: Duration(milliseconds: 300),
+              icon: Icon(
+                Icons.info_outline_rounded,
+                color: Colors.white,
+              ),
+              messageText: Text(
+                'Password does not match!',
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  color: Colors.white,
+                ),
+              ),
+            ).show(context);
+          }
+        } else {
+          if(setup){
+            if(passController.text == password){
+              _loginApp(id, foto, nama, alamat, kategori, noizin, telepon, role, idtoko);
+            } else {
+              setState(() {
+                loading = false;
+                readOnly = false;
+              });
+              Flushbar(
+                reverseAnimationCurve: Curves.decelerate,
+                forwardAnimationCurve: Curves.decelerate,
+                flushbarPosition: FlushbarPosition.BOTTOM,
+                flushbarStyle: FlushbarStyle.FLOATING,
+                isDismissible: false,
+                backgroundColor: Colors.red[600],
+                duration: Duration(seconds: 3),
+                borderRadius: 10.0,
+                margin: EdgeInsets.all(16.0),
+                animationDuration: Duration(milliseconds: 300),
+                icon: Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white,
+                ),
+                messageText: Text(
+                  'Password does not match!',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    color: Colors.white,
+                  ),
+                ),
+              ).show(context);
+            }
+          } else {
+            if(passController.text == password){
+              setState(() {
+                loading = false;
+                readOnly = false;
+              });
+              Navigator.of(context).push(_sharedAxisRoute(BuatPasswordPage(id: id, foto: foto, nama: nama, email: emailController.text, alamat: alamat, telepon: telepon, role: role, idtoko: idtoko,), SharedAxisTransitionType.horizontal));
+            } else {
+              setState(() {
+                loading = false;
+                readOnly = false;
+              });
+              Flushbar(
+                reverseAnimationCurve: Curves.decelerate,
+                forwardAnimationCurve: Curves.decelerate,
+                flushbarPosition: FlushbarPosition.BOTTOM,
+                flushbarStyle: FlushbarStyle.FLOATING,
+                isDismissible: false,
+                backgroundColor: Colors.red[600],
+                duration: Duration(seconds: 3),
+                borderRadius: 10.0,
+                margin: EdgeInsets.all(16.0),
+                animationDuration: Duration(milliseconds: 300),
+                icon: Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white,
+                ),
+                messageText: Text(
+                  'Password does not match!',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    color: Colors.white,
+                  ),
+                ),
+              ).show(context);
+            }
+          }
+        }
       } else {
-
+        setState(() {
+          loading = false;
+          readOnly = false;
+        });
+        Flushbar(
+          reverseAnimationCurve: Curves.decelerate,
+          forwardAnimationCurve: Curves.decelerate,
+          flushbarPosition: FlushbarPosition.BOTTOM,
+          flushbarStyle: FlushbarStyle.FLOATING,
+          isDismissible: false,
+          backgroundColor: Colors.red[600],
+          duration: Duration(seconds: 3),
+          borderRadius: 10.0,
+          margin: EdgeInsets.all(16.0),
+          animationDuration: Duration(milliseconds: 300),
+          icon: Icon(
+            Icons.info_outline_rounded,
+            color: Colors.white,
+          ),
+          messageText: Text(
+            'Your email address not registered!',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              color: Colors.white,
+            ),
+          ),
+        ).show(context);
       }
     }
   }
 
-  Future<FirebaseUser> _loginApp(String nama, String alamat, String kategori, String noizin, String telepon, int role) async {
+  Future<FirebaseUser> _loginApp(String id, String foto, String nama, String alamat, String kategori, String noizin, String telepon, int role, String idtoko) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     try {
       FirebaseUser user = (await firebaseAuth.signInWithEmailAndPassword(
@@ -74,17 +213,59 @@ class LoginState extends State{
 
       final FirebaseUser currentUser = await firebaseAuth.currentUser();
       if (user.uid == currentUser.uid) {
+        preferences.setString('idUser', id);
+        preferences.setString('fotoUser', foto);
         preferences.setString('nameUser', nama);
+        preferences.setString('emailUser', emailController.text);
         preferences.setString('addressUser', alamat);
-        preferences.setString('categoryUser', kategori);
-        preferences.setString('licenseUser', noizin);
+        if(role == 10){
+          preferences.setString('categoryUser', kategori);
+          preferences.setString('licenseUser', noizin);
+        } else {
+          preferences.setString('idToko', idtoko);
+        }
         preferences.setString('phoneUser', telepon);
         preferences.setInt('roleUser', role);
-        Navigator.of(context).pushReplacement(_sharedAxisRoute(HomePage(), SharedAxisTransitionType.horizontal));
+        setState(() {
+          loading = false;
+          readOnly = false;
+        });
+        if(role == 10){
+          Navigator.of(context).pushReplacement(_sharedAxisRoute(HomePage(), SharedAxisTransitionType.horizontal));
+        } else {
+          Navigator.of(context).pushReplacement(_sharedAxisRoute(HomePegawaiPage(), SharedAxisTransitionType.horizontal));
+        }
       }
       return user;
     } catch (e) {
       print('Error Login: $e');
+      setState(() {
+        loading = false;
+        readOnly = false;
+      });
+      Flushbar(
+        reverseAnimationCurve: Curves.decelerate,
+        forwardAnimationCurve: Curves.decelerate,
+        flushbarPosition: FlushbarPosition.BOTTOM,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: false,
+        backgroundColor: Colors.red[600],
+        duration: Duration(seconds: 3),
+        borderRadius: 10.0,
+        margin: EdgeInsets.all(16.0),
+        animationDuration: Duration(milliseconds: 300),
+        icon: Icon(
+          Icons.info_outline_rounded,
+          color: Colors.white,
+        ),
+        messageText: Text(
+          '$e',
+          style: TextStyle(
+            fontFamily: 'Rubik',
+            color: Colors.white,
+          ),
+        ),
+      ).show(context);
       return null;
     }
   }
@@ -104,7 +285,7 @@ class LoginState extends State{
           });
         } else {
           setState(() {
-            helperPasswordErrorText = 'Minimum 6 characters!';
+            helperPasswordErrorText = 'Minimum password is 6 characters!';
             heperPasswordError = true;
             buttonActive = false;
           });
@@ -302,26 +483,35 @@ class LoginState extends State{
                       SizedBox(
                         height: 30.0,
                       ),
-                      GestureDetector(
-                        child: Text(
-                          'Forgot password?',
-                          style: TextStyle(
-                            fontFamily: 'Google'
+                      Row(
+                        children: [
+                          Text(
+                            'Forgot your account password?',
                           ),
-                        ),
-                        onTap: (){
+                          SizedBox(width: 3.0,),
+                          GestureDetector(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                              child: Text(
+                                'Get help here',
+                                style: TextStyle(
+                                  fontFamily: 'Google2'
+                                ),
+                              ),
+                            ),
+                            onTap: (){
 
-                        },
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                AnimatedPositioned(
+                Positioned(
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  duration: Duration(milliseconds: 500),
-                  curve: Curves.fastOutSlowIn,
                   child: Column(
                     children: [
                       Divider(
@@ -351,12 +541,12 @@ class LoginState extends State{
                                 textColor: Colors.white,
                                 color: buttonActive && !loading ? Theme.of(context).buttonColor : Colors.grey,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)
+                                  borderRadius: BorderRadius.circular(8.0)
                                 ),
                               ),
                             ),
                             SizedBox(
-                              height: 10.0,
+                              height: 5.0,
                             ),
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -366,11 +556,14 @@ class LoginState extends State{
                                 ),
                                 SizedBox(width: 3.0,),
                                 GestureDetector(
-                                  child: Text(
-                                    'Resgister now',
-                                    style: TextStyle(
-                                      color: Theme.of(context).accentColor,
-                                      fontFamily: 'Google2'
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                                    child: Text(
+                                      'Resgister now',
+                                      style: TextStyle(
+                                        color: Theme.of(context).accentColor,
+                                        fontFamily: 'Google2'
+                                      ),
                                     ),
                                   ),
                                   onTap: (){

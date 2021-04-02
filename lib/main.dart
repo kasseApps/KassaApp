@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
       title: 'Kassa Apps',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'Rubik',
         brightness: Brightness.light,
         scaffoldBackgroundColor: Color(0xFFF2F2F7),
         backgroundColor: Colors.white,

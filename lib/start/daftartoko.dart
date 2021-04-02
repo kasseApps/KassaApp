@@ -1,6 +1,5 @@
-import 'dart:ffi';
-
 import 'package:animations/animations.dart';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -50,7 +49,29 @@ class DaftarTokoState extends State{
   _checkStore() {
     firestore.collection('users').where('noizin', isEqualTo: licenseController.text).getDocuments().then((value){
       if(value.documents.isNotEmpty){
-
+        Flushbar(
+          reverseAnimationCurve: Curves.decelerate,
+          forwardAnimationCurve: Curves.decelerate,
+          flushbarPosition: FlushbarPosition.BOTTOM,
+          flushbarStyle: FlushbarStyle.FLOATING,
+          isDismissible: false,
+          backgroundColor: Colors.red[600],
+          duration: Duration(seconds: 3),
+          borderRadius: 10.0,
+          margin: EdgeInsets.all(16.0),
+          animationDuration: Duration(milliseconds: 300),
+          icon: Icon(
+            Icons.info_outline_rounded,
+            color: Colors.white,
+          ),
+          messageText: Text(
+            'The store already exists!',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              color: Colors.white,
+            ),
+          ),
+        ).show(context);
       } else {
         _saveStore();
       }
@@ -96,12 +117,35 @@ class DaftarTokoState extends State{
       }
     } catch (e) {
       print('Error Login: $e');
+      Flushbar(
+        reverseAnimationCurve: Curves.decelerate,
+        forwardAnimationCurve: Curves.decelerate,
+        flushbarPosition: FlushbarPosition.BOTTOM,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: false,
+        backgroundColor: Colors.red[600],
+        duration: Duration(seconds: 3),
+        borderRadius: 10.0,
+        margin: EdgeInsets.all(16.0),
+        animationDuration: Duration(milliseconds: 300),
+        icon: Icon(
+          Icons.info_outline_rounded,
+          color: Colors.white,
+        ),
+        messageText: Text(
+          '$e',
+          style: TextStyle(
+            fontFamily: 'Rubik',
+            color: Colors.white,
+          ),
+        ),
+      ).show(context);
     }
   }
 
   _getCategoryStore() async {
     List<CategoryStore> listCategoryStoreTemp = new List<CategoryStore>();
-    await firestore.collection('KategoriToko').orderBy('nama').getDocuments().then((value){
+    await firestore.collection('kategoritoko').orderBy('nama').getDocuments().then((value){
       if(value.documents.isNotEmpty){
         value.documents.forEach((f) {
           CategoryStore categoryStore = new CategoryStore(f.documentID, f.data['nama'], false);
@@ -227,7 +271,6 @@ class DaftarTokoState extends State{
                               listCategoryStore[i].name,
                               style: TextStyle(
                                 fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
-                                fontFamily: 'Google'
                               ),
                             ),
                           ),
@@ -310,7 +353,7 @@ class DaftarTokoState extends State{
                                 height: 10.0,
                               ),
                               Text(
-                                nameController.text.length > 0 ? nameController.text : 'My First Strore',
+                                nameController.text.length > 0 ? nameController.text : 'My First Store',
                                 style: TextStyle(
                                   fontFamily: 'Google2',
                                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
@@ -355,12 +398,10 @@ class DaftarTokoState extends State{
                     )
                   )
                 ),
-                AnimatedPositioned(
+                Positioned(
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  duration: Duration(milliseconds: 500),
-                  curve: Curves.fastOutSlowIn,
                   child: Column(
                     children: [
                       Divider(
@@ -421,9 +462,6 @@ class DaftarTokoState extends State{
       children: [
         Text(
           'Name Store',
-          style: TextStyle(
-            fontFamily: 'Google',
-          ),
         ),
         SizedBox(
           height: 8.0,
@@ -450,9 +488,6 @@ class DaftarTokoState extends State{
         ),
         Text(
           'Category Store',
-          style: TextStyle(
-            fontFamily: 'Google',
-          ),
         ),
         SizedBox(
           height: 8.0,
@@ -485,9 +520,6 @@ class DaftarTokoState extends State{
         ),
         Text(
           'License Number (SIUP/NPWP)',
-          style: TextStyle(
-            fontFamily: 'Google',
-          ),
         ),
         SizedBox(
           height: 8.0,
@@ -514,9 +546,6 @@ class DaftarTokoState extends State{
         ),
         Text(
           'Email Address',
-          style: TextStyle(
-            fontFamily: 'Google',
-          ),
         ),
         SizedBox(
           height: 8.0,
@@ -568,9 +597,6 @@ class DaftarTokoState extends State{
         ),
         Text(
           'Phone Number',
-          style: TextStyle(
-            fontFamily: 'Google',
-          ),
         ),
         SizedBox(
           height: 8.0,
@@ -597,9 +623,6 @@ class DaftarTokoState extends State{
         ),
         Text(
           'Address',
-          style: TextStyle(
-            fontFamily: 'Google',
-          ),
         ),
         SizedBox(
           height: 8.0,

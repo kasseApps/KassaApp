@@ -42,6 +42,10 @@ dependencies:
   sliding_up_panel: ^1.0.2
   md2_tab_indicator: ^1.0.2
   random_string: ^2.1.0
+  another_flushbar: ^1.10.7
+  image_picker: ^0.6.5
+  path_provider: ^1.6.9
+  flutter_image_compress: ^0.6.8
 
 dev_dependencies:
   flutter_test:
@@ -109,6 +113,14 @@ flutter:
     - family: "SansPro"
       fonts:
         - asset: assets/fonts/SansPro-Regular.ttf
+
+    - family: "Rubik"
+      fonts:
+        - asset: assets/fonts/Rubik-Regular.ttf
+
+    - family: "Rubik2"
+      fonts:
+        - asset: assets/fonts/Rubik-Light.ttf
 
   #
   # For details regarding fonts from package dependencies,

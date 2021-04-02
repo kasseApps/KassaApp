@@ -1,5 +1,7 @@
 import 'package:animations/animations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kassa/admin/laporan.dart';
@@ -30,12 +32,12 @@ class HomeState extends State{
 
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   List<MenuAdmin> listMenu = new List<MenuAdmin>();
-  String namaToko, alamatToko, kategoriToko, noizinToko, teleponToko;
+  String idToko, fotoToko, namaToko, alamatToko, kategoriToko, noizinToko, teleponToko;
 
   MenuAdmin menu1 = new MenuAdmin(Icons.shopping_basket_rounded, 'Products', 10, Colors.blue);
   MenuAdmin menu2 = new MenuAdmin(Icons.assignment_ind_rounded,'Employees', 20, Colors.orange);
   MenuAdmin menu3 = new MenuAdmin(Icons.assignment_rounded, 'Reports', 30, Colors.blueGrey);
-  MenuAdmin menu4 = new MenuAdmin(Icons.store_rounded, 'Store', 40, Colors.green);
+  MenuAdmin menu4 = new MenuAdmin(Icons.store_rounded, 'My Store', 40, Colors.green);
 
   @override
   void initState() {
@@ -49,12 +51,20 @@ class HomeState extends State{
 
   _getCurrentUsers() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
+    String id = preferences.getString('idUser');
+    String foto = preferences.getString('fotoUser');
     String namatoko = preferences.getString('nameUser');
     String alamattoko = preferences.getString('addressUser');
     String kategoritoko = preferences.getString('categoryUser');
     String noizintoko = preferences.getString('licenseUser');
     String telepontoko = preferences.getString('phoneUser');
     setState(() {
+      idToko = id;
+      if(foto == null){
+        fotoToko = 'https://firebasestorage.googleapis.com/v0/b/kassaapps-d7ece.appspot.com/o/store.jpeg?alt=media&token=e53fbe4f-029c-4972-8786-6afbae5a7c8e';
+      } else {
+        fotoToko = foto;
+      }
       namaToko = namatoko;
       alamatToko = alamattoko;
       kategoriToko = kategoritoko;
@@ -168,9 +178,28 @@ class HomeState extends State{
               primary: true,
               pinned: true,
               forceElevated: innerBoxIsScrolled,
-              expandedHeight: MediaQuery.of(context).size.height * 0.15,
+              expandedHeight: MediaQuery.of(context).size.height * 0.25,
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.pin,
+                background: CachedNetworkImage(
+                  imageUrl: fotoToko,
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height * 0.25,
+                  fit: BoxFit.cover,
+                  progressIndicatorBuilder: (context, url, downloadProgress){ 
+                    return Center(
+                      child: CupertinoActivityIndicator(),
+                    );
+                  },
+                  errorWidget: (context, url, error){
+                    return Center(
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 30.0,
+                      ),
+                    );
+                  }
+                ),
                 title: Text(
                   namaToko,
                   style: TextStyle(
@@ -187,53 +216,34 @@ class HomeState extends State{
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 10.0,
-              ),
-              Container(
-                width: double.infinity,
-                margin: EdgeInsets.all(16.0),
-                padding: EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.0),
-                  color: Theme.of(context).backgroundColor,
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: Colors.grey[200],
-                      blurRadius: 8.0,
-                    )
-                  ],
-                  border: Border.all(
-                    color: Colors.grey[200],
-                    width: 0.7
-                  )
-                ),
+              Padding(
+                padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 25.0,),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Overview',
+                      'Today overview',
                       style: TextStyle(
-                        fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                        fontSize: Theme.of(context).textTheme.headline5.fontSize,
                         fontFamily: 'Google2',
                       ),
                     ),
+                    SizedBox(
+                      height: 3.0,
+                    ),
                     Text(
-                      '${_getToday()}, ${DateTime.now().day} ${_getNamaBulan(DateTime.now().month)} ${DateTime.now().year}', 
-                      style: TextStyle(
-                        fontSize: Theme.of(context).textTheme.caption.fontSize,
-                      ),
+                      '${_getToday()}, ${DateTime.now().day} ${_getNamaBulan(DateTime.now().month)} ${DateTime.now().year}',
                     ),
                     SizedBox(
                       height: 16.0,
                     ),
                     Material(
-                      borderRadius: BorderRadius.circular(8.0),
+                      borderRadius: BorderRadius.circular(10.0),
                       color: Colors.grey[100],
                       child: ListTile(
                         onTap: (){},
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
                         title: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -262,15 +272,15 @@ class HomeState extends State{
                       ),
                     ),
                     SizedBox(
-                      height: 10.0,
+                      height: 16.0,
                     ),
                     Material(
-                      borderRadius: BorderRadius.circular(8.0),
+                      borderRadius: BorderRadius.circular(10.0),
                       color: Colors.green[50],
                       child: ListTile(
                         onTap: (){},
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
                         title: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -301,81 +311,66 @@ class HomeState extends State{
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
-                child: Text(
-                  'Menu Administrator',
-                  style: TextStyle(
-                    fontFamily: 'Google2',
-                    fontSize: Theme.of(context).textTheme.headline6.fontSize,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 6.0, right: 6.0, bottom: 16.0),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  crossAxisSpacing: 6.0,
-                  mainAxisSpacing: 6.0,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: listMenu.map((menu) {
-                    return Container(
-                      margin: EdgeInsets.all(10.0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16.0),
-                        color: Theme.of(context).backgroundColor,
-                        boxShadow: <BoxShadow>[
-                          BoxShadow(
-                            color: Colors.grey[200],
-                            blurRadius: 8.0,
-                          )
-                        ],
-                        border: Border.all(
-                          color: Colors.grey[200],
-                          width: 0.7
-                        )
+              Padding(padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 30.0, bottom: 10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Manage store',
+                      style: TextStyle(
+                        fontSize: Theme.of(context).textTheme.headline5.fontSize,
+                        fontFamily: 'Google2',
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    GridView.count(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: MediaQuery.of(context).size.width * 0.025,
+                      mainAxisSpacing: MediaQuery.of(context).size.height * 0.025,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      children: listMenu.map((menu){
+                        return GestureDetector(
                           onTap: (){
                             _onClickAction(menu.action);
                           },
                           child: Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  menu.icon,
-                                  size: 50.0,
-                                  color: menu.color,
+                              children: <Widget>[
+                                Container(
+                                  width: MediaQuery.of(context).size.width * 0.14,
+                                  height: MediaQuery.of(context).size.width * 0.14,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.045),
+                                    color: menu.color,
+                                  ),
+                                  child: Icon(
+                                    menu.icon,
+                                    color: Colors.white,
+                                    size: 32.0,
+                                  ),
                                 ),
                                 SizedBox(
-                                  height: 5.0,
+                                  height: 10.0,
                                 ),
                                 Text(
                                   menu.title,
                                   style: TextStyle(
-                                    fontFamily: 'Google2',
-                                    fontSize: Theme.of(context).textTheme.subtitle1.fontSize
+                                    fontSize: Theme.of(context).textTheme.caption.fontSize,
                                   ),
-                                ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                )
                               ],
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
               ),
-              FlatButton(onPressed: (){
-                firebaseAuth.signOut().then((value){
-                  Navigator.of(context).pushReplacement(_sharedAxisRoute(LoginPage(), SharedAxisTransitionType.horizontal));
-                });
-              }, child: Text('Logout'))
             ],
           ),
         ),

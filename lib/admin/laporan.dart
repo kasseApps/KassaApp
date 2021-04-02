@@ -11,24 +11,25 @@ class LaporanPage extends StatefulWidget{
 class LaporanState extends State{
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return <Widget> [
-              SliverAppBar(
-                title: Text(
-                  'Report'
-                ),
-              )
-            ];
-          },
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
+    return Scaffold(
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return <Widget> [
+            SliverAppBar(
+              pinned: true,
+              primary: true,
+              title: Text(
+                'Report'
+              ),
+              centerTitle: true,
+            )
+          ];
+        },
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
 
-              ],
-            ),
+            ],
           ),
         ),
       ),
