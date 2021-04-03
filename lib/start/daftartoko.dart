@@ -1,13 +1,27 @@
+import 'dart:io';
+
 import 'package:animations/animations.dart';
 import 'package:another_flushbar/flushbar.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:kassa/admin/homeadmin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:path/path.dart' as path;
 
 class DaftarTokoPage extends StatefulWidget{
+
+  final int action;
+  final String id, foto, nama, kategori, noizin, email, telepon, alamat;
+
+  const DaftarTokoPage({Key key, @required this.action, this.id, this.foto, this.nama, this.kategori, this.noizin, this.email, this.telepon, this.alamat}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
     return DaftarTokoState();
@@ -22,9 +36,10 @@ class CategoryStore {
   CategoryStore(this.id, this.name, this.check);
 }
 
-class DaftarTokoState extends State{
+class DaftarTokoState extends State<DaftarTokoPage> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final StorageReference fs = FirebaseStorage.instance.ref();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   final Firestore firestore = Firestore.instance;
   final nameController =  TextEditingController();
@@ -37,11 +52,23 @@ class DaftarTokoState extends State{
   final confirmpassController =  TextEditingController();
   List<CategoryStore> listCategoryStore = new List<CategoryStore>();
   int positioned = 0;
-  bool buttonActive = false, obscureNewPass = true, obsecureConfirmPass = true, readOnly = false, loading = false, helperEmailError = false, helperConfirmPassError = false;
+  bool buttonActive = false, obscureNewPass = true, obsecureConfirmPass = true, readOnly = false, loading = false, helperEmailError = false, helperConfirmPassError = false, accepted = false;
   String helperEmailErrorText, helperConfirmPassErrorText;
+  String imgStore;
+  File _imageChoose;
+  
 
   @override
   void initState() {
+    if(widget.action == 20){
+      imgStore = widget.foto;
+      nameController.text = widget.nama;
+      categoryController.text = widget.kategori;
+      licenseController.text = widget.noizin;
+      emailController.text = widget.email;
+      phoneController.text = widget.telepon;
+      addressController.text = widget.alamat;
+    }
     _getCategoryStore();
     super.initState();
   }
@@ -73,13 +100,100 @@ class DaftarTokoState extends State{
           ),
         ).show(context);
       } else {
-        _saveStore();
+        _registerAuth();
       }
     });
   }
 
-  _saveStore() {
+  Future _getImage() async {
+    var image = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _imageChoose = image;
+        _compressImage(_imageChoose);
+      });
+    }
+  }
+
+  _compressImage(File file) async {
+    final dir = await path_provider.getTemporaryDirectory();
+    var name = path.basename(_imageChoose.absolute.path);
+    var result = await FlutterImageCompress.compressAndGetFile(
+      _imageChoose.absolute.path,
+      dir.absolute.path + '/${DateTime.now()}_$name',
+      quality: 60,
+    );
+    print('before : ' + _imageChoose.lengthSync().toString());
+    print('after : ' + result.lengthSync().toString());
+
+    setState(() {
+      _imageChoose = result;
+    });
+  }
+
+  _uploadImageToFirebase() async {
+    StorageReference reference = fs.child('${nameController.text}/profile/${nameController.text}');
+
+    try {
+      StorageUploadTask uploadTask = reference.putFile(_imageChoose);
+
+      if (uploadTask.isInProgress) {
+        uploadTask.events.listen((persen) async {
+          double persentase = 100 *
+              (persen.snapshot.bytesTransferred.toDouble() /
+                  persen.snapshot.totalByteCount.toDouble());
+          print(persentase);
+        });
+
+        StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
+        final String url = await taskSnapshot.ref.getDownloadURL();
+
+        setState(() {
+          imgStore = url;
+          if (widget.action == 20) {
+            // updateDataStaff();
+          } else {
+            _saveStore();
+          }
+        });
+      }
+    } catch (e) {
+      print(e);
+      setState(() {
+        loading = false;
+        readOnly = false;
+      });
+      Flushbar(
+        reverseAnimationCurve: Curves.decelerate,
+        forwardAnimationCurve: Curves.decelerate,
+        flushbarPosition: FlushbarPosition.BOTTOM,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: false,
+        backgroundColor: Colors.red[600],
+        duration: Duration(seconds: 3),
+        borderRadius: 10.0,
+        margin: EdgeInsets.all(16.0),
+        animationDuration: Duration(milliseconds: 300),
+        icon: Icon(
+          Icons.info_outline_rounded,
+          color: Colors.white,
+        ),
+        messageText: Text(
+          '$e',
+          style: TextStyle(
+            fontFamily: 'Rubik',
+            color: Colors.white,
+          ),
+        ),
+      ).show(context);
+    }
+  }
+
+  _saveStore() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
     firestore.collection('users').add({
+      'foto': imgStore,
       'namatoko': nameController.text,
       'kategoritoko': categoryController.text,
       'noizin': licenseController.text,
@@ -89,12 +203,19 @@ class DaftarTokoState extends State{
       'katasandi': confirmpassController.text,
       'role': 10,
     }).then((value){
-      _registerAuth();
+      preferences.setString('idUser', value.documentID);
+      preferences.setString('fotoUser', imgStore);
+      preferences.setString('nameUser', nameController.text);
+      preferences.setString('addressUser', addressController.text);
+      preferences.setString('categoryUser', categoryController.text);
+      preferences.setString('licenseUser', licenseController.text);
+      preferences.setString('phoneUser', phoneController.text);
+      preferences.setInt('roleUser', 10);
+      Navigator.of(context).pushAndRemoveUntil(_sharedAxisRoute(HomePage(), SharedAxisTransitionType.horizontal), (Route<dynamic> route) => false);
     });
   }
 
   _registerAuth() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
     try {
       FirebaseUser user = (await firebaseAuth.createUserWithEmailAndPassword(
           email: emailController.text,
@@ -107,16 +228,14 @@ class DaftarTokoState extends State{
 
       final FirebaseUser currentUser = await firebaseAuth.currentUser();
       if (user.uid == currentUser.uid) {
-        preferences.setString('nameUser', nameController.text);
-        preferences.setString('addressUser', addressController.text);
-        preferences.setString('categoryUser', categoryController.text);
-        preferences.setString('licenseUser', licenseController.text);
-        preferences.setString('phoneUser', phoneController.text);
-        preferences.setInt('roleUser', 10);
-        Navigator.of(context).pushAndRemoveUntil(_sharedAxisRoute(HomePage(), SharedAxisTransitionType.horizontal), (Route<dynamic> route) => false);
+        _uploadImageToFirebase();
       }
     } catch (e) {
       print('Error Login: $e');
+      setState(() {
+        loading = false;
+        readOnly = false;
+      });
       Flushbar(
         reverseAnimationCurve: Curves.decelerate,
         forwardAnimationCurve: Curves.decelerate,
@@ -148,8 +267,18 @@ class DaftarTokoState extends State{
     await firestore.collection('kategoritoko').orderBy('nama').getDocuments().then((value){
       if(value.documents.isNotEmpty){
         value.documents.forEach((f) {
-          CategoryStore categoryStore = new CategoryStore(f.documentID, f.data['nama'], false);
-          listCategoryStoreTemp.add(categoryStore);
+          if(widget.action == 20){
+            if(f.data['nama'].toString().toLowerCase() == widget.kategori.toLowerCase()){
+              CategoryStore categoryStore = new CategoryStore(f.documentID, f.data['nama'], true);
+            listCategoryStoreTemp.add(categoryStore);
+            } else {
+              CategoryStore categoryStore = new CategoryStore(f.documentID, f.data['nama'], false);
+              listCategoryStoreTemp.add(categoryStore);
+            }
+          } else {
+            CategoryStore categoryStore = new CategoryStore(f.documentID, f.data['nama'], false);
+            listCategoryStoreTemp.add(categoryStore);
+          }
         });
       }
     });
@@ -183,10 +312,8 @@ class DaftarTokoState extends State{
         });
       }
     } else {
-      if(newpassController.text.length > 5 && confirmpassController.text == newpassController.text){
+      if(newpassController.text.length > 5 && confirmpassController.text == newpassController.text && accepted){
         setState(() {
-          helperConfirmPassErrorText = null;
-          helperConfirmPassError = false;
           buttonActive = true;
         });
       } else {
@@ -197,6 +324,11 @@ class DaftarTokoState extends State{
           } else if(confirmpassController.text != newpassController.text){
             helperConfirmPassErrorText = "Password don't match!";
             helperConfirmPassError = true;
+          } else if(confirmpassController.text == newpassController.text){
+            setState(() {
+              helperConfirmPassErrorText = null;
+              helperConfirmPassError = false;
+            });
           }
           buttonActive = false;
         });
@@ -308,151 +440,230 @@ class DaftarTokoState extends State{
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: scaffoldKey,
-      backgroundColor: Theme.of(context).backgroundColor,
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return <Widget> [
-            SliverAppBar(
-              primary: true,
-              pinned: true,
-              title: Text(
-                'Register Store'
-              ),
-              centerTitle: true,
-            )
-          ];
-        },
-        body: GestureDetector(
-          onTap: (){
-            FocusScope.of(context).requestFocus(new FocusNode());
+    return WillPopScope(
+      child: Scaffold(
+        key: scaffoldKey,
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return <Widget> [
+              SliverAppBar(
+                primary: true,
+                pinned: true,
+                title: Text(
+                  widget.action == 20 ? 'Edit Store' : 'Register Store'
+                ),
+                centerTitle: true,
+              )
+            ];
           },
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            color: Theme.of(context).backgroundColor,
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 25.0, right: 25.0, top: 16.0, bottom: 16.0),
+          body: GestureDetector(
+            onTap: (){
+              FocusScope.of(context).requestFocus(new FocusNode());
+            },
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 25.0, right: 25.0, top: 25.0, bottom: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: !loading ? (){
+                                    _getImage();
+                                  } : (){},
+                                  child: _imageChoose != null ? Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                      child: Image.file(
+                                        _imageChoose,
+                                        width: double.infinity,
+                                        height: MediaQuery.of(context).size.height * 0.2,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ) : widget.action == 20 ? Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).backgroundColor,
+                                      borderRadius: BorderRadius.circular(16.0),
+                                      boxShadow: <BoxShadow>[
+                                        BoxShadow(
+                                          blurRadius: 10.0,
+                                          color: Theme.of(context).dividerColor,
+                                          offset: Offset(1.0, 1.0),
+                                        )
+                                      ]
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                      child: CachedNetworkImage(
+                                        imageUrl: imgStore,
+                                        width: double.infinity,
+                                        height: MediaQuery.of(context).size.height * 0.2,
+                                        fit: BoxFit.cover,
+                                        progressIndicatorBuilder: (context, url, downloadProgress){ 
+                                          return Center(
+                                            child: CupertinoActivityIndicator(),
+                                          );
+                                        },
+                                        errorWidget: (context, url, error){
+                                          return Center(
+                                            child: Icon(
+                                              Icons.image_not_supported_outlined,
+                                              size: 46.0,
+                                            ),
+                                          );
+                                        }
+                                      ),
+                                    ),
+                                  ) : Container(
+                                    width: double.infinity,
+                                    height: MediaQuery.of(context).size.height * 0.2,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).backgroundColor,
+                                      borderRadius: BorderRadius.circular(16.0),
+                                      border: Border.all(
+                                        color: Theme.of(context).dividerColor,
+                                        width: 0.5
+                                      )
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.image_outlined,
+                                          size: 46.0,
+                                          color: Theme.of(context).disabledColor,
+                                        ),
+                                      )
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 10.0,
+                                ),
+                                Text(
+                                  nameController.text.length > 0 ? nameController.text : 'My First Store',
+                                  style: TextStyle(
+                                    fontFamily: 'Google2',
+                                    fontSize: Theme.of(context).textTheme.headline5.fontSize,
+                                  ),
+                                ),
+                                Text(
+                                  addressController.text.length > 0 ? addressController.text : '',
+                                  style: TextStyle(
+                                    fontSize: Theme.of(context).textTheme.caption.fontSize,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 30.0,
+                          ),
+                          PageTransitionSwitcher(
+                            duration: Duration(
+                              milliseconds: 400,
+                            ),
+                            transitionBuilder: (
+                              Widget child,
+                              Animation<double> primaryAnimation,
+                              Animation<double> secondaryAnimation, 
+                            ){
+                              return SharedAxisTransition(
+                                animation: primaryAnimation, 
+                                secondaryAnimation: secondaryAnimation, 
+                                transitionType: SharedAxisTransitionType.horizontal,
+                                child: child,
+                                fillColor: Theme.of(context).scaffoldBackgroundColor,);
+                            },
+                            child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              key: ValueKey<int>(positioned),
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              child: positioned == 0 ? _inputWidget() : _finishRegister(),
+                            ),
+                          ),
+                        ]
+                      )
+                    )
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Align(
-                          alignment: Alignment.center,
+                        Divider(
+                          thickness: 1.0,
+                          height: 1.0,
+                        ),
+                        Container(
+                          color: Theme.of(context).backgroundColor,
+                          padding: const EdgeInsets.only(left: 25.0, right: 25.0, top: 16.0, bottom: 16.0),
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Image.asset(
-                                'assets/images/login.png',
-                                width: MediaQuery.of(context).size.width * 0.45,
-                              ),
                               SizedBox(
-                                height: 10.0,
-                              ),
-                              Text(
-                                nameController.text.length > 0 ? nameController.text : 'My First Store',
-                                style: TextStyle(
-                                  fontFamily: 'Google2',
-                                  fontSize: Theme.of(context).textTheme.headline5.fontSize,
+                                width: double.infinity,
+                                height: 50.0,
+                                child: FlatButton(
+                                  onPressed: buttonActive && !loading ? (){
+                                    FocusScope.of(context).requestFocus(new FocusNode());
+                                    if(positioned == 0){
+                                      setState(() {
+                                        positioned = 1;
+                                        buttonActive = false;
+                                      });
+                                    } else {
+                                      setState(() {
+                                        readOnly = true;
+                                        loading = true;
+                                      });
+                                      _checkStore();
+                                    }
+                                  } : (){}, 
+                                  child: loading ? CupertinoActivityIndicator() : Text(
+                                    widget.action == 20 ? 'Update store' : positioned == 0 ? 'Next' : 'Register Now'
+                                  ),
+                                  textColor: Colors.white,
+                                  color: buttonActive && !loading ? Theme.of(context).buttonColor : Colors.grey,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)
+                                  ),
                                 ),
                               ),
-                              Text(
-                                addressController.text.length > 0 ? addressController.text : '',
-                                style: TextStyle(
-                                  fontSize: Theme.of(context).textTheme.caption.fontSize,
-                                ),
-                              )
                             ],
                           ),
                         ),
-                        SizedBox(
-                          height: 40.0,
-                        ),
-                        PageTransitionSwitcher(
-                          duration: Duration(
-                            milliseconds: 400,
-                          ),
-                          transitionBuilder: (
-                            Widget child,
-                            Animation<double> primaryAnimation,
-                            Animation<double> secondaryAnimation, 
-                          ){
-                            return SharedAxisTransition(
-                              animation: primaryAnimation, 
-                              secondaryAnimation: secondaryAnimation, 
-                              transitionType: SharedAxisTransitionType.horizontal,
-                              child: child,
-                              fillColor: Theme.of(context).backgroundColor,);
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            key: ValueKey<int>(positioned),
-                            color: Theme.of(context).backgroundColor,
-                            child: positioned == 0 ? _inputWidget() : _finishRegister(),
-                          ),
-                        ),
-                      ]
-                    )
+                      ],
+                    ),
                   )
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Column(
-                    children: [
-                      Divider(
-                        thickness: 1.0,
-                        height: 1.0,
-                      ),
-                      Container(
-                        color: Theme.of(context).backgroundColor,
-                        padding: const EdgeInsets.only(left: 25.0, right: 25.0, top: 16.0, bottom: 16.0),
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              height: 50.0,
-                              child: FlatButton(
-                                onPressed: buttonActive && !loading ? (){
-                                  FocusScope.of(context).requestFocus(new FocusNode());
-                                  if(positioned == 0){
-                                    setState(() {
-                                      positioned = 1;
-                                      buttonActive = false;
-                                    });
-                                  } else {
-                                    setState(() {
-                                      readOnly = true;
-                                      loading = true;
-                                    });
-                                    _checkStore();
-                                  }
-                                } : (){}, 
-                                child: loading ? CupertinoActivityIndicator() : Text(
-                                  positioned == 0 ? 'Next' : 'Register Now'
-                                ),
-                                textColor: Colors.white,
-                                color: buttonActive && !loading ? Theme.of(context).buttonColor : Colors.grey,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
+      onWillPop: positioned == 1 ? (){
+        setState(() {
+          positioned = 0;
+          newpassController.text = '';
+          confirmpassController.text = '';
+          buttonActive = true;
+          accepted = false;
+        });
+      } : null,
     );
   }
 
@@ -642,10 +853,11 @@ class DaftarTokoState extends State{
             fontSize: Theme.of(context).textTheme.subtitle1.fontSize,
           ),
           maxLength: 100,
+          maxLines: null,
           keyboardType: TextInputType.text,
         ),
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.15,
+          height: MediaQuery.of(context).size.height * 0.25,
         )
       ],
     );
@@ -784,6 +996,29 @@ class DaftarTokoState extends State{
           ),
           maxLength: 20,
           keyboardType: TextInputType.text,
+        ),
+        SizedBox(
+          height: 25.0,
+        ),
+        Row(
+          children: [
+            Checkbox(
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              value: accepted, 
+              onChanged: (value){
+                setState(() {
+                  accepted = value;
+                });
+                _enableButton();
+              }
+            ),
+            Text(
+              'I accept the terms of use',
+              style: TextStyle(
+                fontSize: Theme.of(context).textTheme.subtitle1.fontSize,
+              ),
+            )
+          ],
         ),
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.2

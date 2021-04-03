@@ -274,7 +274,7 @@ class TambahPegawaiState extends State<TambahPegawaiPage> {
                             if(widget.action == 20 && imgEmployee != null)
                             Container(
                               decoration: BoxDecoration(
-                                color: Theme.of(context).scaffoldBackgroundColor,
+                                color: Theme.of(context).backgroundColor,
                                 borderRadius: BorderRadius.circular(16.0),
                                 boxShadow: <BoxShadow>[
                                   BoxShadow(
@@ -338,7 +338,7 @@ class TambahPegawaiState extends State<TambahPegawaiPage> {
                                 width: MediaQuery.of(context).size.width * 0.18,
                                 height: MediaQuery.of(context).size.width * 0.18,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).scaffoldBackgroundColor,
+                                  color: Theme.of(context).backgroundColor,
                                   borderRadius: BorderRadius.circular(16.0),
                                   boxShadow: <BoxShadow>[
                                     BoxShadow(

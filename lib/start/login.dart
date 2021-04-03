@@ -43,6 +43,7 @@ class LoginState extends State{
         registered = true;
         value.documents.forEach((f) {
           id = f.documentID;
+          foto = f.data['foto'];
           if(f.data['role'] == 10){
             nama = f.data['namatoko'];
             kategori = f.data['kategoritoko'];
@@ -51,7 +52,6 @@ class LoginState extends State{
             password = f.data['katasandi'];
           } else {
             idtoko = f.data['toko'];
-            foto = f.data['foto'];
             nama = f.data['nama'];
             telepon = f.data['telepon'];
             password = f.data['password'];
@@ -226,14 +226,24 @@ class LoginState extends State{
         }
         preferences.setString('phoneUser', telepon);
         preferences.setInt('roleUser', role);
-        setState(() {
-          loading = false;
-          readOnly = false;
-        });
         if(role == 10){
+          setState(() {
+            loading = false;
+            readOnly = false;
+          });
           Navigator.of(context).pushReplacement(_sharedAxisRoute(HomePage(), SharedAxisTransitionType.horizontal));
         } else {
-          Navigator.of(context).pushReplacement(_sharedAxisRoute(HomePegawaiPage(), SharedAxisTransitionType.horizontal));
+          firestore.collection('users').document(idtoko).get().then((value){
+            if(value.exists){
+              preferences.setString('namaToko', value.data['namatoko']);
+              preferences.setString('fotoToko', value.data['foto']);
+            }
+            setState(() {
+              loading = false;
+              readOnly = false;
+            });
+            Navigator.of(context).pushReplacement(_sharedAxisRoute(HomePegawaiPage(), SharedAxisTransitionType.horizontal));
+          });
         }
       }
       return user;
@@ -567,7 +577,7 @@ class LoginState extends State{
                                     ),
                                   ),
                                   onTap: (){
-                                    Navigator.of(context).push(_sharedAxisRoute(DaftarTokoPage(), SharedAxisTransitionType.horizontal));
+                                    Navigator.of(context).push(_sharedAxisRoute(DaftarTokoPage(action: 10,), SharedAxisTransitionType.horizontal));
                                   },
                                 ),
                               ],

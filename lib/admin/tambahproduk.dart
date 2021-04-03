@@ -360,7 +360,7 @@ class TambahProdukState extends State<TambahProdukPage>{
                             if(widget.action == 20 && imgProduct != null)
                             Container(
                               decoration: BoxDecoration(
-                                color: Theme.of(context).scaffoldBackgroundColor,
+                                color: Theme.of(context).backgroundColor,
                                 borderRadius: BorderRadius.circular(16.0),
                                 boxShadow: <BoxShadow>[
                                   BoxShadow(
@@ -424,7 +424,7 @@ class TambahProdukState extends State<TambahProdukPage>{
                                 width: MediaQuery.of(context).size.width * 0.18,
                                 height: MediaQuery.of(context).size.width * 0.18,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).scaffoldBackgroundColor,
+                                  color: Theme.of(context).backgroundColor,
                                   borderRadius: BorderRadius.circular(16.0),
                                   boxShadow: <BoxShadow>[
                                     BoxShadow(

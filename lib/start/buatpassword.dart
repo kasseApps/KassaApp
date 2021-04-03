@@ -85,10 +85,24 @@ class BuatPasswordState extends State<BuatPasswordPage> {
         preferences.setString('idToko', widget.idtoko);
         preferences.setString('phoneUser', widget.telepon);
         preferences.setInt('roleUser', widget.role);
-        Navigator.of(context).pushAndRemoveUntil(_sharedAxisRoute(HomePegawaiPage(), SharedAxisTransitionType.horizontal), (Route<dynamic> route) => false);
+        firestore.collection('users').document(widget.idtoko).get().then((value){
+          if(value.exists){
+            preferences.setString('namaToko', value.data['namatoko']);
+            preferences.setString('fotoToko', value.data['foto']);
+          }
+          setState(() {
+            loading = false;
+            readOnly = false;
+          });
+          Navigator.of(context).pushAndRemoveUntil(_sharedAxisRoute(HomePegawaiPage(), SharedAxisTransitionType.horizontal), (Route<dynamic> route) => false);
+        });
       }
     } catch (e) {
       print('Error Login: $e');
+      setState(() {
+        loading = false;
+        readOnly = false;
+      });
       Flushbar(
         reverseAnimationCurve: Curves.decelerate,
         forwardAnimationCurve: Curves.decelerate,

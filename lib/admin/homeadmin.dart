@@ -8,7 +8,6 @@ import 'package:kassa/admin/laporan.dart';
 import 'package:kassa/admin/listpegawai.dart';
 import 'package:kassa/admin/listproduk.dart';
 import 'package:kassa/admin/profiletoko.dart';
-import 'package:kassa/start/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget{
@@ -224,7 +223,7 @@ class HomeState extends State{
                     Text(
                       'Today overview',
                       style: TextStyle(
-                        fontSize: Theme.of(context).textTheme.headline5.fontSize,
+                        fontSize: Theme.of(context).textTheme.headline6.fontSize,
                         fontFamily: 'Google2',
                       ),
                     ),
@@ -318,7 +317,7 @@ class HomeState extends State{
                     Text(
                       'Manage store',
                       style: TextStyle(
-                        fontSize: Theme.of(context).textTheme.headline5.fontSize,
+                        fontSize: Theme.of(context).textTheme.headline6.fontSize,
                         fontFamily: 'Google2',
                       ),
                     ),

@@ -152,7 +152,7 @@ class ListPegawaiState extends State{
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Theme.of(context).scaffoldBackgroundColor,
+                              color: Theme.of(context).backgroundColor,
                               borderRadius: BorderRadius.circular(16.0),
                               boxShadow: <BoxShadow>[
                                 BoxShadow(
@@ -274,6 +274,9 @@ class ListPegawaiState extends State{
                     ],
                   ),
                 )
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.15,
               )
             ],
           ),

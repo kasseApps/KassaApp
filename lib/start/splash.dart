@@ -39,12 +39,7 @@ class SpalashState extends State {
         Timer(Duration(milliseconds: 1500), (){
           Navigator.of(context).pushReplacement(_sharedAxisRoute(HomePegawaiPage(), SharedAxisTransitionType.horizontal));
         });
-      } 
-      // else {
-      //   Timer(Duration(milliseconds: 1500), (){
-      //     Navigator.of(context).pushReplacement(_sharedAxisRoute(HomeAdmin(), SharedAxisTransitionType.horizontal));
-      //   });
-      // }
+      }
     }else{
       Timer(Duration(milliseconds: 1500), (){
         Navigator.of(context).pushReplacement(_sharedAxisRoute(LoginPage(), SharedAxisTransitionType.horizontal));
@@ -54,44 +49,40 @@ class SpalashState extends State {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Image.asset(
-                  //   'assets/images/libera.png',
-                  //   width: MediaQuery.of(context).size.width * 0.2,
-                  // ),
-                  // SizedBox(
-                  //   height: 16.0,
-                  // ),
-                  Text(
-                    'Kassa', 
-                    style: TextStyle(
-                      fontSize: Theme.of(context).textTheme.headline4.fontSize,
-                      fontFamily: 'Google2'
-                    ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).accentColor,
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Kassa', 
+                  style: TextStyle(
+                    fontSize: Theme.of(context).textTheme.headline4.fontSize,
+                    fontFamily: 'Google2',
+                    color: Colors.grey[100]
                   ),
-                ],
-              )
-            ),
-            Positioned(
-              bottom: 50.0,
-              left: 0.0,
-              right: 0.0,
-              child: Center(
-                child: Text('\u00a9 2021 Kassa',
-                  style: Theme.of(context).textTheme.overline
+                ),
+              ],
+            )
+          ),
+          Positioned(
+            bottom: 50.0,
+            left: 0.0,
+            right: 0.0,
+            child: Center(
+              child: Text('\u00a9 2021 Kassa',
+                style: TextStyle(
+                  fontSize: Theme.of(context).textTheme.overline.fontSize,
+                  color: Colors.grey[300]
                 ),
               ),
-            )
-          ],
-        ),
-      )
+            ),
+          )
+        ],
+      ),
     );
   }
 

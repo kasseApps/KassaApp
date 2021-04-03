@@ -3,7 +3,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kassa/admin/tambahmetodepembayaran.dart';
 import 'package:kassa/custom/appbar.dart';
+import 'package:kassa/start/daftartoko.dart';
 import 'package:kassa/start/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -116,18 +118,45 @@ class ProfilTokoState extends State{
                     SizedBox(
                       height: 20.0,
                     ),
-                    Container(
-                      padding: EdgeInsets.only(left: 13.0, right: 13.0, top: 4.0, bottom: 4.0),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).accentColor,
-                        borderRadius: BorderRadius.circular(15.0)
-                      ),
-                      child: Text(
-                        kategoriStore,
-                        style: TextStyle(
-                          color: Colors.grey[100]
+                    Row(
+                      children: [
+                        FlatButton.icon(
+                          onPressed: (){},
+                          icon: Icon(
+                            Icons.store_rounded
+                          ),
+                          label: Text(
+                            kategoriStore
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                          color: Theme.of(context).accentColor,
+                          textColor: Colors.grey[100],
                         ),
-                      ),
+                        SizedBox(
+                          width: 8.0,
+                        ),
+                        FlatButton.icon(
+                          onPressed: (){
+                            Navigator.of(context).push(_sharedAxisRoute(DaftarTokoPage(action: 20, id: idStore, foto: fotoStore, nama: namaStore, kategori: kategoriStore, noizin: noizinStore, email: emailStore, telepon: teleponStore, alamat: alamatStore), SharedAxisTransitionType.horizontal));
+                          },
+                          icon: Icon(
+                            Icons.edit,
+                          ),
+                          label: Text(
+                            'Edit store'
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            side: BorderSide(
+                              color: Theme.of(context).accentColor.withAlpha(80),
+                              width: 0.7
+                            )
+                          ),
+                          textColor: Theme.of(context).accentColor
+                        ),
+                      ],
                     ),
                     SizedBox(
                       height: 20.0,
@@ -137,7 +166,9 @@ class ProfilTokoState extends State{
                 ),
               ),
               ListTile(
-                onTap: (){},
+                onTap: (){
+                  Navigator.of(context).push(_sharedAxisRoute(TambahMetodePembayaranPage(), SharedAxisTransitionType.horizontal));
+                },
                 leading: Icon(
                   Icons.payments_rounded,
                   color: Colors.red[600],
@@ -200,9 +231,11 @@ class ProfilTokoState extends State{
                 endIndent: 16.0,
               ),
               ListTile(
-                onTap: (){
+                onTap: () async {
+                  SharedPreferences preferences = await SharedPreferences.getInstance();
                   firebaseAuth.signOut().then((value){
-                    Navigator.of(context).pushReplacement(_sharedAxisRoute(LoginPage(), SharedAxisTransitionType.horizontal));
+                    preferences.clear();
+                    Navigator.of(context).pushAndRemoveUntil(_sharedAxisRoute(LoginPage(), SharedAxisTransitionType.horizontal), (Route<dynamic> route) => false);
                   });
                 },
                 leading: Icon(

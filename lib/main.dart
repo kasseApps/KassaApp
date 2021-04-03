@@ -17,9 +17,9 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Color(0xFFF2F2F7),
         backgroundColor: Colors.white,
         primarySwatch: Colors.green,
-        primaryColor: Colors.green[600],
-        accentColor: Colors.green[600],
-        buttonColor: Colors.green[600],
+        primaryColor: Colors.green[700],
+        accentColor: Colors.green[700],
+        buttonColor: Colors.green[700],
         dialogBackgroundColor: Colors.white,
         textSelectionHandleColor: Colors.greenAccent[400],
         cursorColor: Colors.greenAccent[400],
@@ -27,8 +27,8 @@ class MyApp extends StatelessWidget {
         appBarTheme: AppBarTheme(
           brightness: Brightness.dark,
           elevation: 5.0,
-          shadowColor: Colors.grey[600].withAlpha(50),
-          color: Colors.green[600],
+          shadowColor: Colors.grey[700].withAlpha(50),
+          color: Colors.green[700],
           iconTheme: IconThemeData(
             size: 20.0,
             color: Colors.grey[100],
@@ -42,15 +42,21 @@ class MyApp extends StatelessWidget {
           )
         ),
         tabBarTheme: TabBarTheme(
-          labelColor: Colors.blueAccent[400],
-          unselectedLabelColor: Color(0xFF8898A5),
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
           labelStyle: TextStyle(
-            fontFamily: 'Google2',
-            fontSize: 14.0
+            fontSize: 16.0,
+            fontFamily: 'Google2'
           ),
           unselectedLabelStyle: TextStyle(
-            fontFamily: 'Google2',
-            fontSize: 14.0
+            fontSize: 16.0,
+            fontFamily: 'Google2'
+          ),
+          indicator: UnderlineTabIndicator(
+            borderSide: BorderSide(
+              width: 4.0,
+              color: Colors.white,
+            )
           )
         ),
         iconTheme: IconThemeData(
